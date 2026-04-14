@@ -1,0 +1,25 @@
+FROM ruby:3.4-slim
+
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y \
+      build-essential \
+      libpq-dev \
+      libyaml-dev \
+      libvips \
+      nodejs \
+      curl && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /rails
+
+COPY Gemfile Gemfile.lock ./
+RUN bundle install --without development test
+
+COPY . .
+
+ENV RAILS_ENV=production
+
+RUN SECRET_KEY_BASE_DUMMY=1 bundle exec rails assets:precompile
+
+EXPOSE 3000
+CMD ["bundle", "exec", "rails", "server", "-b", "0.0.0.0", "-e", "production"]
